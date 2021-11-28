@@ -1048,6 +1048,10 @@ class testing {
             }
             if(!good_heights(t)){
                 System.out.println("bad heights!!!");
+                AVLTree.IAVLNode [] nodes = t.treeToArray();
+                for(AVLTree.IAVLNode node : nodes){
+                    System.out.println("key:  " + node.getKey() + " height: " + node.getHeight());
+                }
                 break;
             }
         }
