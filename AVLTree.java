@@ -663,11 +663,12 @@ public class AVLTree {
      */
     public int join(IAVLNode x, AVLTree t) {
         if (t.empty()) {
+            boolean this_empty = this.empty();
             this.insert(x.getKey(), x.getValue());
-            if (this.empty()) {
+            if (this_empty) {
                 return 1;
             }
-            return 1 + this.getRoot().getHeight();
+            return 2 + this.getRoot().getHeight();
         }
         if (this.empty()) {
             int ret = t.join(x, this);
@@ -1000,8 +1001,7 @@ class testing {
         }
         AVLTree.IAVLNode left = root.getLeft();
         AVLTree.IAVLNode right = root.getRight();
-        return root.getHeight() > right.getHeight() && root.getHeight() > left.getHeight() &&
-                (AVLTree.absolute(right.getHeight()- left.getHeight()) < 2) && good_heights_rec(left) && good_heights_rec(right);
+        return (root.getHeight()== 1+ AVLTree.maximum(left.getHeight(), right.getHeight())) && good_heights_rec(left) && good_heights_rec(right);
     }
 
     static AVLTree rand_ops(int n){
@@ -1063,6 +1063,7 @@ class testing {
                 for(AVLTree.IAVLNode node : nodes){
                     System.out.println("key:  " + node.getKey() + " height: " + node.getHeight());
                 }
+                System.exit(0);
                 break;
             }
         }
@@ -1138,7 +1139,7 @@ class testing {
 
     public static void main(String[] args) {
 
-        for(int i = 0; i < 200; i++){
+        for(int i = 0; i < 10; i++){
             AVLTree t = testing.rand_ops(500);
             print_tree(t);
         }
