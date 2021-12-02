@@ -1,6 +1,4 @@
 
-
-
 /**
  * AVLTree
  * <p>
@@ -30,7 +28,12 @@ public class AVLTree {
         this.min = node.get_min();
 
     }
-
+    public int getHeight() {
+        if (this.empty()){
+            return -1;
+        }
+        return this.root.getHeight();
+    }
 
     /**
      * public boolean empty()
@@ -39,6 +42,30 @@ public class AVLTree {
      */
     public boolean empty() {
         return !this.root.isRealNode();
+    }
+
+    public int search_cost(int key){
+        if(empty()){
+            return 1;
+        }
+        IAVLNode Max = this.max;
+        IAVLNode node_father = search_node(key);
+        //find common ancestor:
+        IAVLNode current = Max;
+        while(current.getParent() != null && current.getParent().getKey() > node_father.getKey()){
+            current = current.getParent();
+        }
+         return depth(node_father) + depth(Max) - 2 * depth(current) + 2;
+
+
+    }
+    public int depth(IAVLNode node){
+        int depth = 0;
+        while(node.getParent() != null){
+            node = node.getParent();
+            depth ++;
+        }
+        return depth;
     }
 
     /**
@@ -106,7 +133,7 @@ public class AVLTree {
 
         return this.rebalance(node);
     }
-    //gets node that may violate avl property with it's children
+
 
     private int rebalance(IAVLNode node) {
         if (node == null) {
@@ -242,7 +269,7 @@ public class AVLTree {
     }
 
     private void rotate_right(IAVLNode x) {
-        // System.out.println("rotating right " + x.getKey());
+
         IAVLNode z = x.getParent();
         IAVLNode b = x.getRight();
         if (z.getParent() == null) {
@@ -268,13 +295,10 @@ public class AVLTree {
     }
 
     private void rotate_left(IAVLNode x) {
-        // System.out.println("rotating left " + x.getKey());
-        //System.out.println("rotating left : " + x.getKey());
+
         IAVLNode z = x.getParent();
         IAVLNode b = x.getLeft();
-        //System.out.println("z: " + z.getKey());
-        //System.out.println("b: " + b.getKey());
-        //System.out.println("x: " + x.getKey());
+
         if (z.getParent() == null) {
 
             this.root = x;
@@ -307,7 +331,7 @@ public class AVLTree {
     }
 
     private void bottom_up_resize(IAVLNode node, int to_add) { //goes up the tree and adds to_add to each node's size
-        //System.out.println(node.getKey());
+
         if (node.getParent() == null) { //base case at root
             return;
         }
@@ -344,7 +368,7 @@ public class AVLTree {
      */
     public int delete(int k) {
         IAVLNode node = search_node(k);
-        if (node.getKey() != k) {
+        if (node.getKey() != k || k == -1) {
             return -1;
         }
         this.size -= 1;
@@ -517,7 +541,7 @@ public class AVLTree {
         temp = node1.getHeight();
         node1.setHeight(node2.getHeight());
         node2.setHeight(temp);
-        //testing.print_tree(this);
+
     }
 
     /**
@@ -574,7 +598,7 @@ public class AVLTree {
         for (int i = 0; i < this.size(); i++) {
             res[i] = arr[i].getKey();
         }
-        return res; // to be replaced by student code
+        return res;
     }
 
     /**
@@ -594,7 +618,7 @@ public class AVLTree {
         for (int i = 0; i < this.size(); i++) {
             res[i] = arr[i].getValue();
         }
-        return res; // to be replaced by student code
+        return res;
 
     }
 
@@ -664,11 +688,15 @@ public class AVLTree {
     public int join(IAVLNode x, AVLTree t) {
         if (t.empty()) {
             boolean this_empty = this.empty();
+            int h = 0;
+            if(!this_empty){
+                h = this.getRoot().getHeight();
+            }
             this.insert(x.getKey(), x.getValue());
             if (this_empty) {
                 return 1;
             }
-            return 2 + this.getRoot().getHeight();
+            return 2 + h;
         }
         if (this.empty()) {
             int ret = t.join(x, this);
@@ -1074,76 +1102,129 @@ class testing {
     static AVLTree rand_tree(int n){
         AVLTree t = new AVLTree();
         int minimum = 0;
-        int maximum = 7;
-        for(int i = 0; i < n; i++){
-            print_tree(t);
-            int randomOp = minimum + (int)(Math.random() * maximum);
-            System.out.println("performing op " + randomOp );
-            switch (randomOp){
-                case 0: // insert
-                    int key_to_insert = 1 + (int)(Math.random() * 30);
-                    System.out.println("inserting " + key_to_insert);
-                    t.insert(key_to_insert, Integer.toString(key_to_insert));
-                    break;
-                case 1: // delete
-                    int key_to_delete = 1 + (int)(Math.random() * 30);
-                    System.out.println("deleting " + key_to_delete);
-                    t.delete(key_to_delete);
-                    break;
-                case 2: // print key array
-                    System.out.println("printing all keys :");
-                    for(int key :t.keysToArray()){
-                        System.out.print(key + " ");
-                    }
-                    System.out.println();
-                    break;
-                case 3: // print str array
-                    System.out.println("printing all info :");
-                    for(String key :t.infoToArray()){
-                        System.out.print(key + " ");
-                    }
-                    System.out.println();
-                    break;
-                case 4: // searching
-                    int key_to_search = 1 + (int)(Math.random() * 30);
-                    System.out.println("searching " + key_to_search);
-                    t.search(key_to_search);
-                    break;
-                case 5: //empty
-                    System.out.println("calling empty()");
-                    System.out.println(t.empty());
-                    break;
-                case 6: //min, max
-                    System.out.println("calling min, max");
-                    System.out.println(t.min() +" " + t.max());
-                    break;
-                case 7: //get root
-                    System.out.println("getting root");
-                    System.out.println(t.getRoot().getKey());
-                    break;
-                default:
-                    System.out.println("wtf no case like this");
-            }
-            if(!good_heights(t)){
-                System.out.println("bad heights!!!");
-                AVLTree.IAVLNode [] nodes = t.treeToArray();
-                for(AVLTree.IAVLNode node : nodes){
-                    System.out.println("key:  " + node.getKey() + " height: " + node.getHeight());
-                }
-                break;
-            }
+        int maximum = 2;
+        int num_iterations = 1 + (int)(Math.random() * n);
+        for(int i = 0; i < num_iterations; i++){
+            int key_to_insert = 1 + (int)(Math.random() * 30);
+            t.insert(key_to_insert, Integer.toString(key_to_insert));
         }
-        //System.out.println("final tree: ");
         return t;
     }
 
+    static int inversions(int [] array){
+        int n = array.length;
+        if(n == 0){
+            return 0;
+        }
+        int sum = 0;
+        for(int i = 0; i < n; i++){
+            for(int j = 0; j < i; j++){
+                sum += (array[j] > array[i] ?  1 : 0);
+            }
+        }
+        return sum;
+    }
+
+    static int insert_count(int [] array){
+        AVLTree tree = new AVLTree();
+        int total_cost = 0;
+        for(int key : array){
+            total_cost += tree.search_cost(key);
+            tree.insert(key, "");
+        }
+        return total_cost;
+
+    }
+
+    static int [] reverse_array(int i){
+        int n = 1000*(int) Math.pow(2, i);
+        int[] array = new int[n];
+        int k = 1;
+        for(int j = n-1; j > -1; j--){
+            array[j] = k;
+            k++;
+        }
+        return array;
+    }
+    static boolean in_array(int [] array, int num){
+        for(int i = 0; i < array.length; i++){
+            if(array[i] == num){
+                return true;
+            }
+        }
+        return false;
+    }
+    static int choose(int [] array){
+        if(array.length == 0){
+            System.out.println("empty array cant choose");
+            return -1;
+        }
+        int choice_index = 0 + (int)(Math.random() * array.length);
+        return array[choice_index];
+    }
+
+    static int [] rand_permute(int n){
+        int [] array = new int[n];
+        int minimum = 0; int maximum = 20*(n-1);
+        int randomNum = minimum + (int)(Math.random() * maximum);
+        for(int i = 0; i < n; i ++){
+            randomNum = minimum + (int)(Math.random() * maximum);
+            while(in_array(array, randomNum)){
+                randomNum = minimum + (int)(Math.random() * maximum);
+            }
+            array[i] = randomNum;
+        }
+        return array;
+
+    }
+    static void split_test(int num_tests){
+        for(int i = 0; i < num_tests; i++){
+            AVLTree tree = rand_tree(10);
+            System.out.println("random tree: ");
+            print_tree(tree);
+            int key = choose(tree.keysToArray());
+            System.out.println("spliting by node with key = " + key );
+            AVLTree[] result = tree.split(key);
+            System.out.println("smol result:");
+            print_tree(result[0]);
+            System.out.println("big result:");
+            print_tree(result[1]);
+        }
+    }
+
+
+
+
+
     public static void main(String[] args) {
 
-        for(int i = 0; i < 10; i++){
-            AVLTree t = testing.rand_ops(500);
-            print_tree(t);
-        }
-        System.out.println("finished testing");
+        split_test(100);
+
+//        for(int i : rand_permute(1000)){
+//            System.out.print(i + " ");
+//        }
+
+//        for(int i = 1; i <= 5 ; i++){
+//            System.out.println("for i = " + i );
+//            System.out.println("num inversions: " + inversions(reverse_array(i)));
+//            System.out.println(insert_count(reverse_array(i)));
+//        }
+
+//        for(int i = 1; i <= 5 ; i++){
+//            int [] array = rand_permute(1000*(int)Math.pow(2,i));
+//            System.out.println("for i = " + i );
+//            System.out.println("num inversions: " + inversions(array));
+//            System.out.println("search cost: " + insert_count(array));
+//        }
+
+
+
+
+//        for(int i = 0; i < 100; i++){
+//            AVLTree t = testing.rand_ops(500);
+//            print_tree(t);
+//        }
+//        System.out.println("finished testing");
 //        int [] arr = {50, 30, 70, 20, 35, 60, 80, 15, 25, 40, 55, 10};
 //        AVLTree tree = new AVLTree();
 //        for(int i : arr){
@@ -1171,7 +1252,6 @@ class testing {
         for (int i : arr) {
             huge.insert(i, "");
         }
-
             AVLTree[] splat = huge.split(0);
             print_tree(splat[0]);
             System.out.println("########################################################################");
@@ -1180,16 +1260,5 @@ class testing {
 
 
 
-        }
     }
-
-
-
-
-
-
-
-
-
-
-
+}
