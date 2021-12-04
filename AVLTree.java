@@ -335,6 +335,7 @@ public class AVLTree {
         if (node.getParent() == null) { //base case at root
             return;
         }
+        //System.out.println("at bottom up, current key is " + node.getKey());
         node.getParent().setSize(node.getParent().getSize() + to_add);
         bottom_up_resize(node.getParent(), to_add);
     }
@@ -676,6 +677,35 @@ public class AVLTree {
         return new AVLTree[]{small, big};
     }
 
+
+    public AVLTree[] split_for_test(int x, int [] num_joins) {
+        int counter = 0;
+        AVLTree small = new AVLTree();
+        AVLTree big = new AVLTree();
+        IAVLNode splitter = search_node(x);
+        if (splitter.getLeft().isRealNode()) {
+            small = new AVLTree(splitter.getLeft());
+        }
+        if (splitter.getRight().isRealNode()) {
+            big = new AVLTree(splitter.getRight());
+        }
+        splitter = splitter.getParent();
+        while (splitter != null) {
+            IAVLNode parent = splitter.getParent();
+            if (splitter.getKey() < x) {
+                counter++;
+                small.join(splitter, new AVLTree(splitter.getLeft()));
+            } else {
+                counter++;
+                big.join(splitter, new AVLTree(splitter.getRight()));
+            }
+            splitter = parent;
+        }
+        num_joins[0] = counter;
+
+        return new AVLTree[]{small, big};
+    }
+
     /**
      * public int join(IAVLNode x, AVLTree t)
      * <p>
@@ -686,6 +716,10 @@ public class AVLTree {
      * postcondition: none
      */
     public int join(IAVLNode x, AVLTree t) {
+        //System.out.println("joining trees:");
+        //testing.print_tree(this);
+        //testing.print_tree(t);
+        //System.out.println(this.size == 1 || t.size == 1);
         if (t.empty()) {
             boolean this_empty = this.empty();
             int h = 0;
@@ -711,15 +745,29 @@ public class AVLTree {
             int rank_this = this.getRoot().getHeight();
             int rank_other = t.getRoot().getHeight();
             if (rank_other > rank_this) {
+                //System.out.println("rank this = " + rank_this);
                 IAVLNode current_other = t.getRoot();
+                IAVLNode other_parent = current_other.getParent();
                 while (current_other.getHeight() > rank_this) {
+//                    System.out.println("curr key: " + current_other.getKey());
+                    other_parent = current_other;
+
                     current_other = current_other.getLeft();
                 }
+//                System.out.println("curr key: " + current_other.getKey());
+//                testing.print_tree(this);
+//                System.out.println("#############");
+//                testing.print_tree(t);
+                //System.out.println("current other " + current_other.getKey());
+//                System.out.println("other parent " + other_parent.getKey());
+//                System.out.println("x" + x.getKey());
                 x.setLeft(this.getRoot());
                 this.getRoot().setParent(x);
                 x.setRight(current_other);
-                IAVLNode other_parent = current_other.getParent();
-                current_other.setParent(x);
+
+                if(current_other.isRealNode()){
+                    current_other.setParent(x);
+                }
                 other_parent.setLeft(x);
                 x.setParent(other_parent);
                 x.setSize(x.getLeft().getSize() + x.getRight().getSize() + 1);
@@ -739,18 +787,25 @@ public class AVLTree {
                 x.setHeight(maximum(x.getLeft().getHeight(), x.getRight().getHeight()) + 1);
                 this.size += t.size() + 1;
                 this.max = t.max;
+                x.setParent(null);
                 this.root = x;
             } else {
+
                 IAVLNode current_this = this.getRoot();
+                IAVLNode this_parent = current_this.getParent();
                 while (current_this.getHeight() > rank_other) {
+                    this_parent = current_this;
                     current_this = current_this.getRight();
                 }
                 x.setRight(t.getRoot());
                 t.getRoot().setParent(x);
                 x.setLeft(current_this);
-                IAVLNode this_parent = current_this.getParent();
-                current_this.setParent(x);
-                this_parent.setRight(x);
+                //IAVLNode this_parent = current_this.getParent();
+                if(current_this.isRealNode()){
+                    current_this.setParent(x);
+                }
+
+                this_parent.setRight(x); ///problem
                 x.setParent(this_parent);
                 x.setSize(x.getLeft().getSize() + x.getRight().getSize() + 1);
                 int num_growth = x.getSize() - current_this.getSize();
@@ -975,6 +1030,19 @@ public class AVLTree {
 }
 
 class testing {
+    static void print_mat_int(int[][] mat) {
+        int height = mat.length;
+        int width = mat[0].length;
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                System.out.print(mat[i][j] + " ");
+
+                //System.out.print(mat[i][j] + " ");
+            }
+            System.out.println();
+
+        }
+    }
     static void print_mat(String[][] mat) {
         int height = mat.length;
         int width = mat[0].length;
@@ -1197,8 +1265,52 @@ class testing {
 
 
     public static void main(String[] args) {
+        int[][] observations = new int[10][50];
 
-        split_test(100);
+        for(int i = 1; i <= 10 ; i++){
+            System.out.println("iteration i = " + i);
+            for(int k = 0; k < 10; k++){
+                AVLTree tree = new AVLTree();
+                int [] array = rand_permute(1000*(int)Math.pow(2,i));
+                for(int j : array){
+                    tree.insert(j, Integer.toString(j));
+                }
+                int max_left = tree.getRoot().getLeft().get_max().getKey();
+                int[] num_joins = new int[1];
+                tree.split_for_test(max_left, num_joins);
+                observations[i-1][k] = num_joins[0];
+            }
+        }
+        print_mat_int(observations);
+
+
+            //rand_ops(100*100*10);
+//        int [] arr = {10, 4, 25, 3, 6, 23, 28, 16, 27, 30};
+//        AVLTree tree = new AVLTree();
+//        for(int i : arr){
+//            tree.insert(i, Integer.toString(i));
+//        }
+//        System.out.println("before:");
+//        print_tree(tree);
+//        AVLTree[] res = tree.split(30);
+//        System.out.println("smol: ");
+//        print_tree(res[0]);
+//        System.out.println("big: ");
+//        print_tree(res[1]);
+
+//        int [] arr = {7, 6, 17, 15, 29};
+//        AVLTree tree = new AVLTree();
+//        for(int i : arr){
+//            tree.insert(i, Integer.toString(i));
+//        }
+//        print_tree(tree);
+//        AVLTree[] res = tree.split(29);
+//        System.out.println("smol: ");
+//        print_tree(res[0]);
+//        System.out.println("big: ");
+//        print_tree(res[1]);
+
+        //split_test(100);
 
 //        for(int i : rand_permute(1000)){
 //            System.out.print(i + " ");
